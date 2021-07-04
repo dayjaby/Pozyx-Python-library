@@ -127,6 +127,7 @@ class PozyxConstants:
     MAGNETOMETER_DIV_UT = 16.0
     EULER_ANGLES_DIV_DEG = 16.0
     QUATERNION_DIV = 16384.0
+    GPS_DIV = 10000000.0
     TEMPERATURE_DIV_CELSIUS = 1.0
 
     # flash configuration types

@@ -113,6 +113,55 @@ class PositionError(ByteStructure):
     def yz(self, value):
         self.data[5] = value * self.physical_convert
 
+class GPSPosition(ByteStructure):
+    """Container for GPS data in lat, lon, alt"""
+    physical_convert = PozyxConstants.GPS_DIV
+    physical_convert_alt = 1000.0
+
+    byte_size = 12
+    data_format = 'iii'
+
+    def __init__(self, lat, lon, alt):
+        self.data = [lat, lon, alt]
+
+    def load(self, data, convert=True):
+        for i in range(len(data)):
+            data[i] = int(data[i])
+        self.data = data
+
+    def __str__(self):
+        return 'Lat: {self.lat}, Lon: {self.lon}, Alt: {self.alt}'.format(self=self)
+
+    @property
+    def lat(self):
+        return self.data[0] / self.physical_convert
+
+    @lat.setter
+    def lat(self, value):
+        self.data[0] = int(value * self.physical_convert)
+
+    @property
+    def lon(self):
+        return self.data[1] / self.physical_convert
+
+    @lon.setter
+    def lon(self, value):
+        self.data[1] = int(value * self.physical_convert)
+
+    @property
+    def alt(self):
+        return self.data[2] / self.physical_convert_alt
+
+    @alt.setter
+    def alt(self, value):
+        self.data[2] = int(value * self.physical_convert_alt)
+
+    def to_dict(self):
+        return {
+            "lat": self.lat,
+            "lon": self.lon,
+            "alt": self.alt,
+        }
 
 class Quaternion(ByteStructure):
     """Container for quaternion data in x, y, z and w."""

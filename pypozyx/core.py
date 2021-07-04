@@ -350,6 +350,8 @@ class PozyxCore(object):
                                                             partial_data.byte_size]), partial_data)
             total_byte_data += partial_data.byte_data
         partial_data = Data([0] * (data.byte_size - runs * _MAX_SERIAL_SIZE))
+        print(Data([offset + runs * _MAX_SERIAL_SIZE, partial_data.byte_size]))
+        print(partial_data)
         status &= self.regFunction(PozyxRegisters.READ_RX_DATA, Data([offset + runs * _MAX_SERIAL_SIZE,
                                                         partial_data.byte_size]), partial_data)
         total_byte_data += partial_data.byte_data

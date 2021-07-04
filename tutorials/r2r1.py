@@ -11,6 +11,9 @@ light up on both devices.
 """
 
 import time
+import os
+import serial
+import pynmea2
 
 from pypozyx import (PozyxSerial, PozyxConstants, version,
                      SingleRegister, DeviceRange, POZYX_SUCCESS, POZYX_FAILURE, get_first_pozyx_serial_port)
@@ -64,11 +67,7 @@ class ReadyToRange(object):
         # self.pozyx.startAloha()
         # self.pozyx.stopAloha()
 
-    def loop(self):
-        data = GPSPosition(lat=0, lon=0, alt=0)
-        data.lat = 1.0
-        data.lon = 2.0
-        data.alt = 3.0
+    def loop(self, data):
         rx_data = GPSPosition(lat=0, lon=0, alt=0)
         """Performs ranging and sets the LEDs accordingly"""
         device_range = DeviceRange()
@@ -77,7 +76,11 @@ class ReadyToRange(object):
             self.destination_id, device_range, self.remote_id)
         if status == POZYX_SUCCESS:
             print(device_range)
-            self.pozyx.sendTXBufferData(self.destination_id)
+            status = self.pozyx.sendTXBufferData(self.destination_id)
+            if status == POZYX_FAILURE:
+                print("Failed to transmit tx data")
+            else:
+                print("TX Data success")
             #self.pozyx.sendAloha(POZYX_QUEUE_CUSTOM_ALOHA)
         else:
             error_code = SingleRegister()
@@ -111,14 +114,11 @@ if __name__ == "__main__":
         perform_latest_version_check()
 
     # hardcoded way to assign a serial port of the Pozyx
-    serial_port = '/dev/ttyACM1'
+    serial_port = os.path.realpath('/dev/ttyACM0')
 
-    remote_id = 0x6778           # the network ID of the remote device
-    remote = False               # whether to use the given remote device for ranging
-    if not remote:
-        remote_id = None
+    remote_id = None
 
-    destination_id = 0x673d      # network ID of the ranging destination
+    destination_id = 0x672d      # network ID of the ranging destination
     # distance that separates the amount of LEDs lighting up.
     range_step_mm = 1000
 
@@ -129,6 +129,21 @@ if __name__ == "__main__":
     r = ReadyToRange(pozyx, destination_id, range_step_mm,
                      ranging_protocol, remote_id)
     r.setup()
+    ser = serial.Serial("/dev/ttyUSB0", 9600)
+    data = GPSPosition(lat=0, lon=0, alt=0)
+    data.lat = 53.4877533
+    data.lon = 10.3717767
+    data.alt = 99.0
     while True:
-        r.loop()
+        try:
+            line = ser.readline().decode("utf8").strip()
+            if line.startswith("$GPGGA"):
+                gp = pynmea2.parse(line)
+                data.lat = gp.latitude
+                data.lon = gp.longitude
+                data.alt = gp.altitude
+                print(data)
+        except:
+            pass # ignore parsing errors
+        r.loop(data)
         time.sleep(0.5)

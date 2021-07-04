@@ -11,6 +11,7 @@ light up on both devices.
 """
 
 import time
+import os
 
 from pypozyx import (PozyxSerial, PozyxConstants, version,
                      SingleRegister, DeviceRange, POZYX_SUCCESS, POZYX_FAILURE, get_first_pozyx_serial_port)
@@ -71,6 +72,7 @@ class ReadyToRange(object):
         data.lat = 1.0
         data.lon = 2.0
         data.alt = 3.0
+        self.pozyx.writeTXBufferData(data)
         rx_data = GPSPosition(lat=0, lon=0, alt=0)
         """Performs ranging and sets the LEDs accordingly"""
         device_range = DeviceRange()
@@ -92,7 +94,8 @@ class ReadyToRange(object):
         status = self.pozyx.readRXBufferData(rx_data)
         if status == POZYX_SUCCESS:
             print(rx_data)
-            self.pozyx.writeTXBufferData(rx_data)
+            #self.pozyx.writeTXBufferData(rx_data)
+            #self.pozyx.sendTXBufferData(self.destination_id)
             self.pozyx.sendTXBufferData(self.destination_id)
 
     def ledControl(self, distance):
@@ -115,12 +118,9 @@ if __name__ == "__main__":
         perform_latest_version_check()
 
     # hardcoded way to assign a serial port of the Pozyx
-    serial_port = '/dev/ttyACM0'
+    serial_port = os.path.realpath('/dev/pozyx_326834653037')
 
-    remote_id = 0x673d           # the network ID of the remote device
-    remote = False               # whether to use the given remote device for ranging
-    if not remote:
-        remote_id = None
+    remote_id = None
 
     destination_id = 0x6778      # network ID of the ranging destination
     # distance that separates the amount of LEDs lighting up.
